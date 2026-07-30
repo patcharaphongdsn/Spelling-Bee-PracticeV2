@@ -1,0 +1,38 @@
+name: Fill Cambridge audio URLs
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "index.html"
+      - "scripts/fetch_cambridge_audio.py"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install scraper dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Fetch Cambridge UK and US audio URLs
+        run: python scripts/fetch_cambridge_audio.py
+
+      - name: Commit populated audio URLs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html cambridge-audio-report.json
+          git diff --cached --quiet || git commit -m "Fill Cambridge pronunciation audio URLs"
+          git push
